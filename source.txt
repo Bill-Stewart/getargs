@@ -1,0 +1,7 @@
+getargs.ico
+getargs.pp
+getargs.rc
+getargsg.rc
+LICENSE
+README.md
+README.txt
