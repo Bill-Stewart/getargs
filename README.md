@@ -1,4 +1,4 @@
-# getargs/getargsg - Copyright (C) 2020 by Bill Stewart (bstewart at iname.com)
+# getargs/getargsg - Copyright (C) 2020-2023 by Bill Stewart (bstewart AT iname.com)
 
 This is free software and comes with ABSOLUTELY NO WARRANTY.
 
@@ -18,7 +18,7 @@ The commands are identical, except that **getargsg** provides its output using a
 
 ## NOTES
 
-* Leading whitespace (spaces and/or tabs) on the command line are ignored.
+* Leading whitespace (spaces and/or tabs) before the first command line argument are ignored.
 
 ## EXAMPLES
 
@@ -50,4 +50,8 @@ The commands are identical, except that **getargsg** provides its output using a
 
 ### 1.0 (2020-07-17)
 
-  * Initial version.
+* Initial version.
+
+### 1.0.1 (2023-11-21)
+
+* Updated for full Unicode support.

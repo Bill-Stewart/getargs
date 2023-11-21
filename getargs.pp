@@ -1,6 +1,6 @@
 { getargs - output exact content of command line
 
-  Copyright (C) 2020 by Bill Stewart (bstewart at iname.com)
+  Copyright (C) 2020-2023 by Bill Stewart (bstewart at iname.com)
 
   This program is free software: you can redistribute it and/or modify it under
   the terms of the GNU General Public License as published by the Free Software
@@ -18,85 +18,35 @@
 }
 
 {$MODE OBJFPC}
-{$H+}
+{$MODESWITCH UNICODESTRINGS}
+
 {$IFDEF GUI}
-  {$APPTYPE GUI}
-  {$R getargsg.res}
+{$APPTYPE GUI}
+{$R getargsg.res}
 {$ELSE}
-  {$APPTYPE CONSOLE}
-  {$R getargs.res}
+{$APPTYPE CONSOLE}
+{$R getargs.res}
 {$ENDIF}
 
-program
-  getargs;
+program getargs;
 
+// wargcv unit: https://github.com/Bill-Stewart/wargcv/
 uses
-  windows;
+  windows,
+  wargcv,
+  wwrite;
 
 const
   APP_NAME = 'getargsg';
 
 var
-  CommandTail: pwidechar;
-
-// The GetCommandLineW() Windows API function returns a pointer to the entire
-// command line (this includes quotes around the executable name if present).
-// This function returns a pointer to the first parameter on the command line
-// after the executable name.
-function GetCommandTail(): pwidechar;
-  const
-    WHITESPACE: set of char = [#9, #32];
-  var
-    pCL, pTail: pwidechar;
-    InQuote: boolean;
-    ArgNo, N: longint;
-  begin
-  pCL := GetCommandLineW();
-  pTail := nil;
-  if pCL^ <> #0 then
-    begin
-    InQuote := false;
-    pTail := pCL;
-    ArgNo := 0;
-    for N := 0 To Length(pCL) do
-      begin
-      case pCL[N] of
-        #0:
-          break;
-        '"':
-          begin
-          InQuote := not InQuote;
-          if InQuote then
-            begin
-            if ArgNo = 1 then
-              break;
-            end;
-          Inc(pTail);
-          end;
-        #9,#32:
-          begin
-          if (not InQuote) and (not (pCL[N - 1] in WHITESPACE)) then
-            Inc(ArgNo);
-          Inc(pTail);
-          end;
-        else
-          begin
-          if ArgNo = 1 then
-            break
-          else
-            Inc(pTail);
-          end;
-        end; //case
-      end;
-    end;
-  result := pTail;
-  end;
+  CommandTail: PChar;
 
 begin
-  CommandTail := GetCommandTail();
+  CommandTail := GetCommandTail(GetCommandLineW(), 1);
 {$IFDEF GUI}
   MessageBoxW(0, CommandTail, APP_NAME, 0);
 {$ELSE}
-  WriteLn(unicodestring(CommandTail));
+  WWriteLn(CommandTail);
 {$ENDIF}
 end.
