@@ -1,6 +1,6 @@
 { getargs - output exact content of command line
 
-  Copyright (C) 2020-2023 by Bill Stewart (bstewart at iname.com)
+  Copyright (C) 2020-2026 by Bill Stewart (bstewart at iname.com)
 
   This program is free software: you can redistribute it and/or modify it under
   the terms of the GNU General Public License as published by the Free Software

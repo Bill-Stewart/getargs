@@ -1,4 +1,4 @@
-{ Copyright (C) 2023 by Bill Stewart (bstewart at iname.com)
+{ Copyright (C) 2023-2026 by Bill Stewart (bstewart at iname.com)
 
   This program is free software: you can redistribute it and/or modify it under
   the terms of the GNU General Public License as published by the Free Software
@@ -31,26 +31,27 @@ procedure WWriteLn(const S: string);
 implementation
 
 uses
-  Windows;
+  windows;
 
 procedure WWrite(const S: string);
 var
   StdOutput: HANDLE;
   BufLen, BytesWritten: DWORD;
-  Bytes: array of Byte;
 begin
   StdOutput := GetStdHandle(STD_OUTPUT_HANDLE);
-  if not WriteConsoleW(StdOutput,  // HANDLE  hConsoleOutput
-    PChar(S),                      // VOID    *lpBuffer
-    Length(S),                     // DWORD   nNumberOfCharsToWrite
-    nil,                           // LPDWORD lpNumberOfCharsWritten
-    nil) then                      // LPVOID  lpReserved
+  if GetFileType(StdOutput) = FILE_TYPE_CHAR then
+  begin
+    WriteConsoleW(StdOutput,  // HANDLE  hConsoleOutput
+      PChar(S),               // VOID    *lpBuffer
+      Length(S),              // DWORD   nNumberOfCharsToWrite
+      nil,                    // LPDWORD lpNumberOfCharsWritten
+      nil);                   // LPVOID  lpReserved
+  end
+  else
   begin
     BufLen := Length(S) * SizeOf(Char);
-    SetLength(Bytes, BufLen);
-    Move(PByte(@S[1])^, Bytes[0], BufLen);
     WriteFile(StdOutput,  // HANDLE       hFile
-      Bytes[0],           // LPCVOID      lpBuffer
+      S[1],               // LPCVOID      lpBuffer
       BufLen,             // DWORD        nNumberOfBytesToWrite
       BytesWritten,       // LPDWORD      lpNumberOfBytesWritten
       nil);               // LPOVERLAPPED lpOverlapped
