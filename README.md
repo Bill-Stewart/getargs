@@ -20,13 +20,7 @@ The commands are identical, except that **getargsg** provides its output using a
 
 * Leading whitespace (spaces and/or tabs) before the first command line argument are ignored.
 
-* If you redirect the output of **getargs** to a file using the `>` operator in cmd.exe or in PowerShell 7.4 and later, the output will be in Unicode (UTF16 little-endian, no byte-order marker) format.
-
-* In PowerShell versions older than 7.4, output redirection using the `>` operator will produce corrupted output because PowerShell performs string conversion before delivering the output. To work around this, you can run the command with `Start-Process` using the `-NoNewWindow`, `-RedirectStandardOutput`, and `-Wait` parameters. For example:
-
-        Start-Process getargs «test» -NoNewWindow -RedirectStandardOutput test.txt -Wait
-
-  The output file will contain a Unicode (UTF16, little endian) string.
+* Redirected output from **getargs** is UTF8 text.
 
 ## EXAMPLES
 
@@ -71,3 +65,7 @@ The commands are identical, except that **getargsg** provides its output using a
 * Improved Unicode output efficiency for console version.
 
 * Added notes to documentation regarding console output redirection.
+
+### 1.1.0 (2026-08-17)
+
+* Updated output redirection for console version to use UTF8.

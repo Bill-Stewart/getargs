@@ -22,45 +22,96 @@ unit wwrite;
 
 interface
 
-// Windows/Unicode output to console (or file if redirected), without newline
-procedure WWrite(const S: string);
-
-// Windows/Unicode output to console (or file if redirected), with newline
-procedure WWriteLn(const S: string);
-
-implementation
-
 uses
   windows;
 
-procedure WWrite(const S: string);
+procedure WWrite(const S: string; Handle: THandle = STD_OUTPUT_HANDLE);
+
+procedure WWriteLn(const S: string; const Handle: THandle = STD_OUTPUT_HANDLE);
+
+implementation
+
+function TrimNewLine(S: string): string;
 var
-  StdOutput: HANDLE;
-  BufLen, BytesWritten: DWORD;
+  I, J: Integer;
 begin
-  StdOutput := GetStdHandle(STD_OUTPUT_HANDLE);
-  if GetFileType(StdOutput) = FILE_TYPE_CHAR then
+  I := Length(S);
+  if I > 0 then
   begin
-    WriteConsoleW(StdOutput,  // HANDLE  hConsoleOutput
-      PChar(S),               // VOID    *lpBuffer
-      Length(S),              // DWORD   nNumberOfCharsToWrite
-      nil,                    // LPDWORD lpNumberOfCharsWritten
-      nil);                   // LPVOID  lpReserved
+    J := I;
+    while (J > 0) and ((S[J] = #13) or (S[J] = #10)) do
+      Dec(J);
+    if J <> I Then
+      SetLength(S, J);
+  end;
+  result := S;
+end;
+
+function UTF16ToUTF8String(const S: string): UTF8String;
+var
+  BufSize: DWORD;
+  pBuffer: PUTF8Char;
+begin
+  result := '';
+  BufSize := WideCharToMultiByte(CP_UTF8,  // UINT   CodePage
+    0,                                     // DWORD  dwFlags
+    PChar(S),                              // LPCWCH lpWideCharStr
+    -1,                                    // int    cchWideChar
+    nil,                                   // LPSTR  lpMultiByteStr
+    0,                                     // int    cbMultiByte
+    nil,                                   // LPCCH  lpDefaultChar
+    nil);                                  // LPBOOL lpUsedDefaultChar
+  if BufSize = 0 then
+    exit;
+  GetMem(pBuffer, BufSize);
+  if WideCharToMultiByte(CP_UTF8,  // UINT   CodePage
+    0,                             // DWORD  dwFlags
+    PChar(S),                      // LPCWCH lpWideCharStr
+    -1,                            // int    cchWideChar
+    pBuffer,                       // LPSTR  lpMultiByteStr
+    BufSize,                       // int    cbMultiByte
+    nil,                           // LPCCH  lpDefaultChar
+    nil) > 0 then                  // LPBOOL lpUsedDefaultChar
+  begin
+    result := UTF8String(pBuffer);
+  end;
+  FreeMem(pBuffer);
+end;
+
+procedure WWrite(const S: string; Handle: THandle = STD_OUTPUT_HANDLE);
+var
+  UTF8Str: UTF8String;
+  BytesWritten: DWORD;
+begin
+  case Handle of
+    STD_OUTPUT_HANDLE, STD_ERROR_HANDLE:
+      Handle := GetStdHandle(Handle);
+  end;
+  if GetFileType(Handle) = FILE_TYPE_CHAR then
+  begin
+    // No UTF8 conversion needed for writing to FILE_TYPE_CHAR handle
+    WriteConsoleW(Handle,  // HANDLE  hConsoleOutput
+      PChar(S),            // VOID    *lpBuffer
+      Length(S),           // DWORD   nNumberOfCharsToWrite
+      nil,                 // LPDWORD lpNumberOfCharsWritten
+      nil);                // LPVOID  lpReserved
   end
   else
   begin
-    BufLen := Length(S) * SizeOf(Char);
-    WriteFile(StdOutput,  // HANDLE       hFile
-      S[1],               // LPCVOID      lpBuffer
-      BufLen,             // DWORD        nNumberOfBytesToWrite
-      BytesWritten,       // LPDWORD      lpNumberOfBytesWritten
-      nil);               // LPOVERLAPPED lpOverlapped
+    // Convert to UTF8 without trailing newlines for writing to handle other
+    // than FILE_TYPE_CHAR
+    UTF8Str := UTF16ToUTF8String(TrimNewLine(S));
+    WriteFile(Handle,   // HANDLE       hFile
+      UTF8Str[1],       // LPCVOID      lpBuffer
+      Length(UTF8Str),  // DWORD        nNumberOfBytesToWrite
+      BytesWritten,     // LPDWORD      lpNumberOfBytesWritten
+      nil);             // LPOVERLAPPED lpOverlapped
   end;
 end;
 
-procedure WWriteLn(const S: string);
+procedure WWriteLn(const S: string; const Handle: THandle = STD_OUTPUT_HANDLE);
 begin
-  WWrite(S + sLineBreak);
+  WWrite(S + sLineBreak, Handle);
 end;
 
 begin
